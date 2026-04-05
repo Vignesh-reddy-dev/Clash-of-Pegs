@@ -1,0 +1,160 @@
+CLASH OF PEGS II 
+ PSEUDOCODE AND COMPLEXITIES
+
+
+Board: 9×9 grid, Goal at (4,4) Players: Human (W) vs CPU (B) Special Pegs: Gold (extra turn), Blue (swap), Red (reset), Neutral (remove)
+
+WHAT CHANGED FROM PHASE 1 TO PHASE 2 ?
+Phase 1 (Greedy)
+CPU picked the best immediate move (short-term).
+Phase 2 (This version)
+CPU explores future branches of play up to a fixed depth (d = 4).
+Uses:
+Divide & Conquer: recursive exploration of branches
+Min–Max: CPU maximizes, Human minimizes
+Sorting: checks goal-closer moves first
+DP Memoization: caches evaluated states to avoid recomputation.
+
+PSEUDOCODE :
+
+Generate Possible Moves
+
+GET_POSSIBLE_MOVES(pos, board, opponentPos):
+    jumps = []
+    steps = []
+for each direction in {up,down,left,right}:
+        next = pos + direction
+
+        // Step move
+        if next in bounds AND board[next] is EMPTY AND next != opponentPos:
+            add (landing=next, jumped=null) to steps
+
+        // Jump move
+        if next in bounds AND board[next] is a PEG:
+            walk = next
+            while walk in bounds AND board[walk] is a PEG:
+                lastPeg = walk
+                walk = walk + direction
+
+            if walk in bounds AND board[walk] is EMPTY AND walk != opponentPos:
+                add (landing=walk, jumped=lastPeg, pegType=board[lastPeg]) to jumps
+
+    if jumps not empty: return jumps
+    else return steps
+
+Apply Move (Update board + effects)
+
+APPLY_MOVE(board, move, startPos):
+    newBoard = copy(board)
+    newPos = move.landing
+ extraTurn = false
+    swap = false
+    sentBack = false
+
+    if move.jumped != null:
+        remove jumped peg from newBoard
+
+        if pegType == BLUE: swap = true
+        else if pegType == RED: sentBack = true ; newPos = startPos
+        else if pegType == GOLD: extraTurn = true
+
+    return (newBoard, newPos, extraTurn, swap, sentBack)
+
+CPU Main Decision
+
+CPU_CHOOSE_MOVE(board, cpuPos, humanPos):
+    moves = GET_POSSIBLE_MOVES(cpuPos, board, humanPos)
+    if moves empty: return null
+
+    SORT moves by increasing ManhattanDistance(move.landing, GOAL)
+
+    bestMove = null
+    bestScore = -infinity
+
+    for each move in moves:
+        (b2, cpu2, _, _, _) = APPLY_MOVE(board, move, CPU_START)
+
+        score = EVALUATE(b2, cpu2, humanPos, depth = d-1, cpuTurn = false)
+
+        if score > bestScore:
+            bestScore = score
+            bestMove = move
+
+    return bestMove
+
+Divide & Conquer Min–Max with DP
+
+EVALUATE(board, cpuPos, humanPos, depth, cpuTurn):
+    key = encode(board, cpuPos, humanPos, depth, cpuTurn)
+    if key in memo: return memo[key]
+
+    if depth == 0:
+        val = HEURISTIC(cpuPos, humanPos)
+        memo[key] = val
+        return val
+
+    if cpuTurn == true:          // CPU MAX
+        moves = GET_POSSIBLE_MOVES(cpuPos, board, humanPos)
+        if moves empty: return HEURISTIC(cpuPos, humanPos)
+
+        SORT moves by distance to GOAL
+        best = -infinity
+
+        for m in moves:
+            (b2, cpu2, _, _, _) = APPLY_MOVE(board, m, CPU_START)
+            best = max(best, EVALUATE(b2, cpu2, humanPos, depth-1, false))
+
+        memo[key] = best
+        return best
+
+    else:                        // Human MIN
+        moves = GET_POSSIBLE_MOVES(humanPos, board, cpuPos)
+        if moves empty: return HEURISTIC(cpuPos, humanPos)
+
+        worst = +infinity
+        for m in moves:
+            (b2, hum2, _, _, _) = APPLY_MOVE(board, m, HUMAN_START)
+            worst = min(worst, EVALUATE(b2, cpuPos, hum2, depth-1, true))
+
+        memo[key] = worst
+        return worst
+
+Heuristic Function
+
+HEURISTIC(cpuPos, humanPos):
+    cpuDist = Manhattan(cpuPos, GOAL)
+    humDist = Manhattan(humanPos, GOAL)
+    return (humDist - cpuDist) * 100
+
+TIME AND SPACE COMPLEXITY ANALYSIS 
+
+Time Complexity
+Human / CPU Move Generation (getPossibleMoves)
+Checks 4 directions per peg. 
+Worst-case jumps across almost all pegs. 
+If N = ROWS * COLS (~81), worst-case moves ≈ O(N) per position. 
+Complexity: O(N)
+AI Divide & Conquer (evaluateDivideConquer)
+Recursively evaluates CPU & Human moves up to MAX_DEPTH = 4. 
+Each level generates at most M moves (M ≤ N). 
+Time ≈ O(M^depth) → worst-case O(N^depth) → O(N^4)
+Sorting Moves in AI
+Sorting M moves by Manhattan distance → O(M log M) per depth. 
+Dominated by recursion → O(N^4)
+Human Turn
+Selecting from legalMoves → O(M) ≈ O(N)
+Overall, per CPU turn: O(N^4)
+
+Space Complexity
+Board Copy (deepCopyBoard)
+Board is ROWS x COLS = N → O(N) space per copy.
+Recursion in AI (evaluateDivideConquer)
+Depth = MAX_DEPTH = 4 
+Each recursion keeps a copy of board → O(depth * N) → O(N) (depth constant)
+Memoization Table
+Stores stringified board + positions + depth → worst-case entries ≈ O(M^depth) = O(N^4)
+
+
+
+
+Time and complexity table : 

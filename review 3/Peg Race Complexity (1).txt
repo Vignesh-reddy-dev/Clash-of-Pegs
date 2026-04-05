@@ -1,0 +1,31 @@
+PEG RACE GAME – TIME AND SPACE COMPLEXITY ANALYSIS
+Complexity Table (N = 9 fixed)
+Detailed Explanation
+Board Representation
+Time Complexity: O(N²) – Iterates through all N×N cells during initialization.
+Space Complexity: O(N²) – Stores the 2D character array.
+Move Generation
+Time Complexity: O(1) – Only 4 possible directions checked.
+Space Complexity: O(1) – Stores at most 4 possible moves.
+Minimax Search (Backtracking)
+Time Complexity: O(b^d) – b = branching factor, d = search depth (MAX_DEPTH = 4).
+Space Complexity: O(d) – Recursion stack depth.
+Minimax with DP (Memoization)
+Time Complexity: O(b^d) – Avoids recomputation using cached states.
+Space Complexity: O(b^d) – Stores evaluated states in HashMap.
+State Encoding (DP Key Creation)
+Time Complexity: O(N²) – Encoding entire board into string key.
+Space Complexity: O(N²) – String length proportional to board size.
+GUI Rendering
+Time Complexity: O(N²) – Draws all grid cells.
+Space Complexity: O(1) – No additional algorithmic storage.
+Overall Program Complexity
+Time Complexity: O(b^d × N²) – Dominated by minimax search.
+Space Complexity: O(N² + b^d) – Board storage + DP cache.
+Key Observations
+N = 9 (fixed) – N² ≈ 81, treated as constant in practice.
+b (branching factor) – Typically between 2–4.
+d (search depth) – MAX_DEPTH = 4.
+Move Generation is O(1) – Constant time operation.
+Summary
+The algorithm is exponential in search depth (b^d) and quadratic in grid size (N²). For the fixed 9×9 board, the practical bottleneck is the minimax search complexity rather than board size.
